@@ -99,13 +99,6 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                     except ZeroDivisionError:  # for the case where the user has sent 0 messages
                         user_id_mapped_to_user_data[key][3] = 0
                 return user_id_mapped_to_user_data
-
-        if i == 19:
-                message_id = data['response']['messages'][i]['id']
-                remaining = iterations/(number_of_messages - 1)
-                remaining *= 100
-                remaining = round(remaining, 2)
-                print(str(remaining)+' percent done')
                 
         payload = {'before_id': message_id}
         response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at, params=payload)
