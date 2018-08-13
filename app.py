@@ -94,6 +94,7 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                     requests.post('https://api.groupme.com/v3/bots/post', params = post_params)
                     to_send = ''
                 print("COMPLETE")
+                to_send = ''
                 for key in user_id_mapped_to_user_data:
                     try:
                         user_id_mapped_to_user_data[key][3] = user_id_mapped_to_user_data[key][2] / user_id_mapped_to_user_data[key][1]
