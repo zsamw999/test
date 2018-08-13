@@ -7,13 +7,14 @@ global group_id, botId, at
 group_id = str(os.environ.get('GID'))
 botId = str(os.environ.get('BID'))
 at = str(os.environ.get('AID'))
+chid = str(os.environ.get('CID'))
 
 def prepare_user_dictionary():
     response = requests.get('https://api.groupme.com/v3/groups?token='+at)
     gdata = response.json()
     i = 0
     for i in range(len(data['response'])):
-        if gdata['response'][i]['name'] == 'Testing':
+        if gdata['response'][i]['name'] == chid:
             number_of_messages = gdata['response'][i]['messages']['count']
             members_of_group_data = gdata['response'][i]['members']
             i += 1
@@ -99,7 +100,9 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                     except ZeroDivisionError:  # for the case where the user has sent 0 messages
                         user_id_mapped_to_user_data[key][3] = 0
                 return user_id_mapped_to_user_data
-                
+            
+        if i == 19:
+                message_id = data['response']['messages'][i]['id']
         payload = {'before_id': message_id}
         response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at, params=payload)
         data = response.json()
