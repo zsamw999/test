@@ -92,6 +92,7 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                 if len(to_send) > 0:
                     post_params = { 'bot_id' : botId, 'text': to_send } 
                     requests.post('https://api.groupme.com/v3/bots/post', params = post_params)
+                    to_send = ''
                 print("COMPLETE")
                 for key in user_id_mapped_to_user_data:
                     try:
