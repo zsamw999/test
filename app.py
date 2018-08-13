@@ -120,4 +120,4 @@ while True:
             user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
             break
         
-        time.sleep(30)
+        time.sleep(10)
