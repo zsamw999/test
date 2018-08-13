@@ -13,7 +13,7 @@ def prepare_user_dictionary():
     response = requests.get('https://api.groupme.com/v3/groups?token='+at)
     gdata = response.json()
     i = 0
-    for i in range(len(data['response'])):
+    for i in range(len(gdata['response'])):
         if gdata['response'][i]['name'] == chid:
             number_of_messages = gdata['response'][i]['messages']['count']
             members_of_group_data = gdata['response'][i]['members']
