@@ -50,7 +50,7 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                 list_of_favs = data['response']['messages'][i]['favorited_by']  
                 length_of_favs = len(list_of_favs)  
                 created = data['response']['messages'][i]['created_at'] 
-                created_format = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(created))
+                created_format = time.strftime('%Y-%m-%d %H:%M', time.localtime(created))
 
                 number_of_words_in_message = len(re.findall(r'\w+', str(message_with_only_alphanumeric_characters)))
 
@@ -93,7 +93,6 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                     post_params = { 'bot_id' : botId, 'text': to_send } 
                     requests.post('https://api.groupme.com/v3/bots/post', params = post_params)
                 print("COMPLETE")
-                print
                 for key in user_id_mapped_to_user_data:
                     try:
                         user_id_mapped_to_user_data[key][3] = user_id_mapped_to_user_data[key][2] / user_id_mapped_to_user_data[key][1]
@@ -119,4 +118,4 @@ while True:
             user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
             break
         
-        time.sleep(20)
+        time.sleep(30)
