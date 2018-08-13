@@ -1,11 +1,12 @@
 import requests
 import time
 import re
+import os
 
 global group_id, botId, at
-group_id = GID
-botId = BID
-at = AID
+group_id = str(os.environ.get('GID'))
+botId = str(os.environ.get('BID'))
+at = str(os.environ.get('AID'))
 
 def prepare_user_dictionary(members_of_group_data):
     response = requests.get('https://api.groupme.com/v3/groups?token='+at)
