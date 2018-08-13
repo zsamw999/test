@@ -8,7 +8,7 @@ group_id = str(os.environ.get('GID'))
 botId = str(os.environ.get('BID'))
 at = str(os.environ.get('AID'))
 
-def prepare_user_dictionary(members_of_group_data):
+def prepare_user_dictionary():
     response = requests.get('https://api.groupme.com/v3/groups?token='+at)
     gdata = response.json()
     i = 0
@@ -119,7 +119,7 @@ while True:
         for message in response_messages:
             search_term = message['text']
             search_id = message['id']
-            user_dictionary = prepare_user_dictionary(members_of_group_data)
+            user_dictionary = prepare_user_dictionary()
             user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, number_of_messages, search_term, search_id, data)
             break
         
