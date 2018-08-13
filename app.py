@@ -29,7 +29,7 @@ def prepare_user_dictionary():
         i += 1
     return user_dictionary
 
-def analyze_group(group_id, user_id_mapped_to_user_data, number_of_messages, search_term, search_id, data):
+def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id, data):
     message_with_only_alphanumeric_characters = ''
     message_id = 0
     iterations = 0.0
@@ -120,7 +120,7 @@ while True:
             search_term = message['text']
             search_id = message['id']
             user_dictionary = prepare_user_dictionary()
-            user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, number_of_messages, search_term, search_id, data)
+            user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
             break
         
         time.sleep(20)
