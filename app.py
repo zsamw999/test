@@ -114,10 +114,11 @@ while True:
     if (response.status_code == 200):
         response_messages = response.json()['response']['messages']
         for message in response_messages:
-            search_term = message['text']
-            search_id = message['id']
-            user_dictionary = prepare_user_dictionary()
-            user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
-            break
+            if message['text'] is not None:
+                search_term = message['text']
+                search_id = message['id']
+                user_dictionary = prepare_user_dictionary()
+                user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
+                break
         
         time.sleep(10)
