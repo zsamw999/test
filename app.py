@@ -85,7 +85,7 @@ def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id,
                 user_id_mapped_to_user_data[sender_id][4] += number_of_words_in_message
                 
                 if ((search_term.lower() == '#wrongthread')):
-                     pass
+                     break
                 
                 if (message is not None) and (message.lower() == search_term.lower()) and (message_id != search_id) and (name != 'MemberBerry'):
                      to_send = ("I 'member " + search_term + " was previously 'membered by " + name + " on " + created_format + ". " + str(length_of_favs) + " likes.")
@@ -117,6 +117,8 @@ while True:
     if (response.status_code == 200):
         response_messages = response.json()['response']['messages']
         for message in response_messages:
+            if message['text'].lower() == '#wrongthread':
+                break
             if message['text'] is not None:
                 search_term = message['text']
                 search_id = message['id']
