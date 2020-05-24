@@ -1,7 +1,7 @@
 import requests
 import time
 import re
-import os
+import pandas as pd
 
 global group_id, botId, at
 group_id = str(os.environ.get('GID'))
@@ -9,121 +9,81 @@ botId = str(os.environ.get('BID'))
 at = str(os.environ.get('AID'))
 chid = str(os.environ.get('CID'))
 
-def prepare_user_dictionary():
-    response = requests.get('https://api.groupme.com/v3/groups?token='+at)
-    gdata = response.json()
-    i = 0
-    for i in range(len(gdata['response'])):
-        if gdata['response'][i]['name'] == chid:
-            number_of_messages = gdata['response'][i]['messages']['count']
-            members_of_group_data = gdata['response'][i]['members']
-            i += 1
-    user_dictionary = {}
-    i = 0
-    while True:
-        try:
-            user_id = members_of_group_data[i]['user_id']
-            nickname = members_of_group_data[i]['nickname']
-            user_dictionary[user_id] = [nickname, 0.0, 0.0, 0.0, 0.0, {}, {}, 0.0]
-        except IndexError:  
-            return user_dictionary
-        i += 1
-    return user_dictionary
-
-def analyze_group(group_id, user_id_mapped_to_user_data, search_term, search_id, data):
-    message_with_only_alphanumeric_characters = ''
+def load_messages(search_name, search_message, search_message_clean, search_message_id, response_messages, total_messages):
     message_id = 0
-    iterations = 0.0
-    to_send = ''
-    while True:
-        for i in range(20):  
-            try:
-                iterations += 1
-                name = data['response']['messages'][i]['name']  
-                message = data['response']['messages'][i]['text']  
-                message_id = data['response']['messages'][i]['id']  
-                try:
-                    message_with_only_alphanumeric_characters = re.sub(r'\W+', ' ', str(message))
-                except ValueError:
-                    pass  
-                sender_id = data['response']['messages'][i]['sender_id']  
-                list_of_favs = data['response']['messages'][i]['favorited_by']  
-                length_of_favs = len(list_of_favs)  
-                created = data['response']['messages'][i]['created_at'] 
-                created_format = time.strftime('%Y-%m-%d %H:%M', time.localtime(created))
+    progress = 0.0
+    counted = 0
+    df = pd.DataFrame()
+    temp = pd.DataFrame()
+    rules = [search_name != 'MemberBerry',
+             search_message_clean.lower() not in ('wrongthread','dhatp','flabongo','flabango','autolike','hofer'),
+             search_message_clean.lower() not in ('haha','ha','hilarious','lol','wow','yes'),
+             search_message_clean.lower() not in ('goodone','sogood','greatone','thatsagoodone','niceone','somanyguys'),
+             search_message_clean.lower() not in ('loser','fuck','damnit','dammit','fuckyoumemberberry','gotohellmemberberry')
+             ]
 
-                number_of_words_in_message = len(re.findall(r'\w+', str(message_with_only_alphanumeric_characters)))
-
-                if sender_id not in user_id_mapped_to_user_data.keys():
-                    user_id_mapped_to_user_data[sender_id] = [name, 0.0, 0.0, 0.0, 0.0, {}, {}, 0.0]
-
-                if user_id_mapped_to_user_data[sender_id][0] == '':
-                    user_id_mapped_to_user_data[sender_id][0] = name
-
-                for user_id in list_of_favs:
-                    if user_id in user_id_mapped_to_user_data[sender_id][5].keys():
-                        user_id_mapped_to_user_data[sender_id][5][user_id] += 1
-                    else:
-                        user_id_mapped_to_user_data[sender_id][5][user_id] = 1
-
-                for user_id in list_of_favs:
-                    for user_id_inner in list_of_favs:
-                        if user_id not in user_id_mapped_to_user_data.keys():
-                            # leave name blank because this means a user is has liked a message but has yet to be added
-                            # to the dictionary. So leave the name blank until they send their first message.
-                            user_id_mapped_to_user_data[user_id] = ['', 0.0, 0.0, 0.0, 0.0, {}, {}, 0.0]
-                        if user_id == user_id_inner:
-                            user_id_mapped_to_user_data[user_id][7] += 1
-                            continue  # pass because you don't want to count yourself as sharing likes with yourself
-                        try:
-                            user_id_mapped_to_user_data[user_id][6][user_id_inner] += 1
-                        except KeyError:
-                            user_id_mapped_to_user_data[user_id][6][user_id_inner] = 1
-
-                user_id_mapped_to_user_data[sender_id][1] += 1  
-                user_id_mapped_to_user_data[sender_id][2] += length_of_favs
-                user_id_mapped_to_user_data[sender_id][4] += number_of_words_in_message
-                
-                if ((search_term.lower() == '#wrongthread')):
-                     break
-                
-                if (message is not None) and (message.lower() == search_term.lower()) and (message_id != search_id) and (name != 'MemberBerry'):
-                     to_send = ("I 'member " + search_term + " was previously 'membered by " + name + " on " + created_format + ". " + str(length_of_favs) + " likes.")
-                     pass
-                
-            except IndexError:
-                if len(to_send) > 0:
-                    post_params = { 'bot_id' : botId, 'text': to_send } 
-                    requests.post('https://api.groupme.com/v3/bots/post', params = post_params)
-                    to_send = ''
-                print("COMPLETE")
-                to_send = ''
-                for key in user_id_mapped_to_user_data:
-                    try:
-                        user_id_mapped_to_user_data[key][3] = user_id_mapped_to_user_data[key][2] / user_id_mapped_to_user_data[key][1]
-                    except ZeroDivisionError:  # for the case where the user has sent 0 messages
-                        user_id_mapped_to_user_data[key][3] = 0
-                return user_id_mapped_to_user_data
+    if all(rules):    
+        while counted < total_messages:
+            temp = pd.DataFrame(response_messages)
+            temp['created_format'] = pd.to_datetime(temp['created_at'],  unit='s', )
+            temp['text_clean'] = temp['text'].str.replace('\W', '')
+            df = df.append(temp[['id','created_at','created_format','name','text','text_clean','favorited_by']], ignore_index = True)
+            counted = counted + 99
+            progress = round(counted / total_messages * 100,2)    
+            oldest = temp['created_at'].min()
+            oldest_format = str(temp['created_format'].iloc[-1])
+            print(str(progress) + '%  ' + str(oldest_format))
+            message_id = str(temp['id'].iloc[-1])
             
-        if i == 19:
-                message_id = data['response']['messages'][i]['id']
-        payload = {'before_id': message_id}
-        response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at, params=payload)
-        data = response.json()
+            if counted < total_messages:
+                payload = {'before_id': message_id}
+                response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at+'&limit=100', params=payload)
+                response_messages = response.json()['response']['messages']
+
+        if df['text_clean'].str.contains(search_message_clean, case=False, na=False).sum() > 0:
+            print("potential matches")
+            df_search = pd.DataFrame(df['text_clean'].str.contains(search_message_clean, case=False, na=False))
+            df_search.reset_index(inplace=True)
+            df_filter = pd.DataFrame(df_search['index'][(df_search['text_clean'] == True)])
+            df_join = df_filter.join(df, how='left')        
+            load_memberberry(df_join, search_name, search_message, search_message_clean, search_message_id)
+    else: 
+        print("RULE BREAK")
+           
+def load_memberberry(df_join, search_name, search_message, search_message_clean, search_message_id):
+    to_send = ''
+    i = 0
+    for i in range(len(df_join)):    
+        message = df_join['text_clean'].iloc[i]
+        name = df_join['name'].iloc[i]  
+        message_id = df_join['id'].iloc[i]
+        created_format = df_join['created_format'].iloc[i]
+        length_of_favs = len(df_join['favorited_by'].iloc[i])
+    
+        if (message is not None) and (message.lower() == search_message_clean.lower()) and (message_id != search_message_id) and (name != 'MemberBerry'):
+            to_send = ("I 'member " + search_message + " was previously 'membered by " + name + " on " + str(created_format) + ". " + str(length_of_favs) + " likes.")
+            #print("criteria: " + to_send)
+            pass
+        i += 1
+        
+    if len(to_send) > 0:
+        post_params = { 'bot_id' : botId, 'text': to_send } 
+        requests.post('https://api.groupme.com/v3/bots/post', params = post_params)
+        to_send = ''
+    print("COMPLETE: " + to_send)
+    to_send = ''
 
 while True:
-    response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at)
-    data = response.json()
+    response = requests.get('https://api.groupme.com/v3/groups/'+group_id+'/messages?token='+at+'&limit=100')
     if (response.status_code == 200):
         response_messages = response.json()['response']['messages']
+        total_messages = response.json()['response']['count']
         for message in response_messages:
-            if message['text'].lower() == '#wrongthread':
-                break
             if message['text'] is not None:
-                search_term = message['text']
-                search_id = message['id']
-                user_dictionary = prepare_user_dictionary()
-                user_id_mapped_to_user_data = analyze_group(group_id, user_dictionary, search_term, search_id, data)
-                break
-        
+                search_name = message['name']  
+                search_message = message['text']
+                search_message_clean = re.sub(r'\W+', '', str(search_message))
+                search_message_id = message['id']
+                load_messages(search_name, search_message, search_message_clean, search_message_id, response_messages, total_messages)
+                break       
         time.sleep(10)
