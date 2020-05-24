@@ -3,6 +3,7 @@ import time
 import re
 import os	
 import pandas as pd
+from datetime import date, datetime, timedelta
 
 global group_id, botId, at
 group_id = str(os.environ.get('GID'))
@@ -10,13 +11,15 @@ botId = str(os.environ.get('BID'))
 at = str(os.environ.get('AID'))
 chid = str(os.environ.get('CID'))
 
-def load_messages(search_name, search_message, search_message_clean, search_message_id, response_messages, total_messages):
+def load_messages(search_name, search_message, search_message_clean, search_message_id, search_message_dt, response_messages, total_messages):
     message_id = 0
     progress = 0.0
     counted = 0
     df = pd.DataFrame()
     temp = pd.DataFrame()
+    today_stamp = time.time()
     rules = [search_name != 'MemberBerry',
+             today_stamp <= search_message_dt + 3601,
              search_message_clean.lower() not in ('wrongthread','dhatp','flabongo','flabango','autolike','hofer'),
              search_message_clean.lower() not in ('haha','ha','hilarious','lol','wow','yes'),
              search_message_clean.lower() not in ('goodone','sogood','greatone','thatsagoodone','niceone','somanyguys'),
@@ -85,6 +88,7 @@ while True:
                 search_message = message['text']
                 search_message_clean = re.sub(r'\W+', '', str(search_message))
                 search_message_id = message['id']
-                load_messages(search_name, search_message, search_message_clean, search_message_id, response_messages, total_messages)
+                search_message_dt = message['created_at']
+                load_messages(search_name, search_message, search_message_clean, search_message_id, search_message_dt, response_messages, total_messages)
                 break       
         time.sleep(10)
