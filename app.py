@@ -20,7 +20,7 @@ def load_messages(search_name, search_message, search_message_clean, search_mess
     today_stamp = time.time()
     rules = [search_name != 'MemberBerry',
              today_stamp <= search_message_dt + 3601,
-             search_message_clean.lower() not in ('wrongthread','dhatp','flabongo','flabango','autolike','hofer'),
+             search_message_clean.lower() not in ('wrongthread','dhatp','flabongo','flabango','autolike','hofer','rip'),
              search_message_clean.lower() not in ('haha','ha','hilarious','lol','wow','yes'),
              search_message_clean.lower() not in ('goodone','sogood','greatone','thatsagoodone','niceone','somanyguys'),
              search_message_clean.lower() not in ('loser','fuck','damnit','dammit','fuckyoumemberberry','gotohellmemberberry')
