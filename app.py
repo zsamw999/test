@@ -14,7 +14,7 @@ chid = str(os.environ.get('CID'))
 def load_messages(search_name, search_message, search_message_clean, search_message_id, search_message_dt, response_messages, total_messages):
     message_id = 0
     progress = 0.0
-    counted = 0
+    counted = 100
     df = pd.DataFrame()
     temp = pd.DataFrame()
     today_stamp = time.time()
@@ -33,7 +33,7 @@ def load_messages(search_name, search_message, search_message_clean, search_mess
             temp['text_clean'] = temp['text'].str.replace('\W', '')
             df = df.append(temp[['id','created_at','created_format','name','text','text_clean','favorited_by']], ignore_index = True)
             counted = counted + 99
-            progress = round(counted / total_messages * 100,2)    
+            progress = round((counted - 100) / total_messages * 100,2)    
             oldest = temp['created_at'].min()
             oldest_format = str(temp['created_format'].iloc[-1])
             print(str(progress) + '%  ' + str(oldest_format))
